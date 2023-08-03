@@ -22,7 +22,7 @@ pub fn run(options: Options) -> Result<()> {
     let mut files: Vec<_> = options
         .files
         .iter()
-        .map(|path| File::open(path))
+        .map(File::open)
         .collect::<Result<_>>()?;
 
     let mut into = File::create(options.output)?;

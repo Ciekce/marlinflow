@@ -67,7 +67,7 @@ To train a network, you will need a large amount of training data. There are a n
 To convert a file in the legacy text format into a data file, use marlinflow-utils, which is built in much the same way as the parser:
 ```bash
 cd utils
-cargo rustc --release -- -C target-cpu=native
+cargo rustc --release -- -C target-cpu-native
 ```
 The resulting binary will be in `target/release/`, and can be invoked as follows:
 ```bash
@@ -87,4 +87,6 @@ Here, `<fen>` is a [FEN string](https://www.chessprogramming.org/Forsyth-Edwards
 - `txt-to-data` converts a legacy text file into a data file.
 - `shuffle` shuffles a data file. It is extremely important to shuffle your data before training, to prevent overfitting.
 - `interleave` randomly interleaves data files. This allows you to cleanly combine data from multiple sources without requiring a re-shuffle, provided that the source files have already been shuffled.
+- `stats` will scan a data file and output some possibly useful statistics about it.
+- `count` will tell you how many positions are in a data file.
 - `convert` will convert an NNUE JSON file into the BlackMarlin NNUE format. (currently only supports HalfKP)

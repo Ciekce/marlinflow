@@ -8,7 +8,7 @@ pub fn serialize_dense_i8(weights: &[Box<[f32]>], bin: &mut Vec<u8>, scale: f32)
     }
 }
 
-pub fn serialize_flat_i8(weights: &[f32], bin: &mut Vec<u8>, scale: f32) {
+pub fn _serialize_flat_i8(weights: &[f32], bin: &mut Vec<u8>, scale: f32) {
     for &weight in weights {
         bin.extend(i8::try_from((weight * scale) as i64).unwrap().to_le_bytes())
     }
