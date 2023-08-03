@@ -5,6 +5,8 @@ import json
 import os
 import pathlib
 
+import sys
+
 from dataloader import BatchLoader
 from model import (
     NnBoard768Cuda,
@@ -45,13 +47,13 @@ def train(
     dataloader: BatchLoader,
     scheduler: torch.optim.lr_scheduler._LRScheduler,
     wdl: float,
-    wdl_drop: float | None,
     scale: float,
     epochs: int,
     save_epochs: int,
     train_id: str,
-    train_log: TrainLog | None = None,
+    prev_epoch: int,
     lr_drop: int | None = None,
+    train_log: TrainLog | None = None,
 ) -> None:
     clipper = WeightClipper()
     running_loss = torch.zeros((1,), device=DEVICE)
@@ -62,7 +64,7 @@ def train(
     iter_since_log = 0
 
     fens = 0
-    epoch = 0
+    epoch = prev_epoch
 
     while epoch < epochs:
         new_epoch, batch = dataloader.read_batch(DEVICE)
@@ -80,17 +82,24 @@ def train(
             iterations = 0
             fens = 0
 
+            scheduler.step()
+
             if epoch % save_epochs == 0:
-                torch.save(model.state_dict(), f"nn/{train_id}_{epoch}")
+                torch.save({
+                    'epoch': epoch,
+                    'model_state': model.state_dict(),
+                    'optim_state': optimizer.state_dict()
+                    }, f"nn/checkpoints/{train_id}_{epoch}")
                 param_map = {
                     name: param.detach().cpu().numpy().tolist()
                     for name, param in model.named_parameters()
                 }
-                with open(f"nn/{train_id}.json", "w") as json_file:
+                with open(f"nn/{train_id}_{epoch}.json", "w") as json_file:
                     json.dump(param_map, json_file)
-            scheduler.step()
-            if lr_drop is not None and wdl_drop is not None and epoch == lr_drop:
-                wdl = wdl_drop
+                print(f"Saved network to nn/{train_id}_{epoch}.json")
+
+            print(f"new lr: {scheduler.get_last_lr()}")
+
 
         optimizer.zero_grad()
         prediction = model(batch)
@@ -132,11 +141,9 @@ def main():
     parser.add_argument("--train-id", type=str, help="ID to save train logs with")
     parser.add_argument("--lr", type=float, help="Initial learning rate")
     parser.add_argument("--lr-end", type=float, help="Final learning rate")
-    parser.add_argument("--lr-drop", type=int, help="Epoch to drop LR at for step LR")
     parser.add_argument("--epochs", type=int, help="Epochs to train for")
     parser.add_argument("--batch-size", type=int, default=16384, help="Batch size")
     parser.add_argument("--wdl", type=float, default=0.0, help="WDL weight to be used")
-    parser.add_argument("--wdl-drop", type=float, help="WDL weight to use after drop")
     parser.add_argument("--scale", type=float, help="WDL weight to be used")
     parser.add_argument(
         "--save-epochs",
@@ -148,7 +155,7 @@ def main():
         "--resume",
         type=str,
         default=None,
-        help="Path to a saved network to resume training",
+        help="Path to a saved checkpoint to resume training",
     )
     args = parser.parse_args()
 
@@ -157,9 +164,7 @@ def main():
 
     train_log = TrainLog(args.train_id)
 
-    model = SquaredPerspectiveNet(768).to(DEVICE)
-    if args.resume is not None:
-        model.load_state_dict(torch.load(args.resume))
+    model = PerspectiveNet(384).to(DEVICE)
 
     data_path = pathlib.Path(args.data_root)
     paths = list(map(str, data_path.glob("*.bin")))
@@ -167,19 +172,21 @@ def main():
 
     optimizer = torch.optim.AdamW(model.parameters(), lr=args.lr)
 
-    scheduler: torch.optim.lr_scheduler._LRScheduler
-    if args.lr_end is not None:
-        # starting LR is args.lr, ending LR is args.lr_end
-        # there are args.epochs epochs
-        # so the LR should drop by a factor of (args.lr_end / args.lr) ** (1 / args.epochs) each epoch
-        gamma = (args.lr_end / args.lr) ** (1 / args.epochs)
+    # starting LR is args.lr, ending LR is args.lr_end
+    # there are args.epochs epochs
+    # so the LR should drop by a factor of (args.lr_end / args.lr) ** (1 / args.epochs) each epoch
+    gamma = (args.lr_end / args.lr) ** (1 / args.epochs)
 
-        scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=gamma)
-    elif args.lr_drop is not None:
-        scheduler = torch.optim.lr_scheduler.StepLR(optimizer, args.lr_drop, gamma=0.1)
-    else:
-        print("No learning rate schedule specified, using constant LR")
-        scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=1.0)
+    scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=gamma)
+
+    prev_epoch = 0
+
+    if args.resume is not None:
+        checkpoint = torch.load(args.resume)
+        print(f"resuming from epoch {checkpoint['epoch']}")
+        model.load_state_dict(checkpoint['model_state'])
+        optimizer.load_state_dict(checkpoint['optim_state'])
+        prev_epoch = checkpoint['epoch']
 
     train(
         model,
@@ -187,13 +194,12 @@ def main():
         dataloader,
         scheduler,
         args.wdl,
-        args.wdl_drop,
         args.scale,
         args.epochs,
         args.save_epochs,
         args.train_id,
+        prev_epoch,
         train_log=train_log,
-        lr_drop=args.lr_drop,
     )
 
 
