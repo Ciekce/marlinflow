@@ -25,6 +25,7 @@ In `trainer/`, do
 ```bash
 mkdir nn
 mkdir runs
+mkdir runs/checkpoints
 ```
 
 5. Decide upon the directory in which you want to store your training data. (simply making a `data/` directory inside `trainer/` is a solid option)
@@ -49,17 +50,20 @@ python main.py       \
 - `--train-id` is the name of the training run.
 - `--lr` is the learning rate.
 - `--epochs` is the number of epochs to train for.
-- `--lr-drop` is the number of epochs after which the learning rate is dropped by a factor of 10.
+- `--lr-drop` is the number of epochs after which the learning rate is dropped by a factor of 10. This occurs every N epochs (so with `--lr-drop 30`, LR will be dropped on epoch 30, 60, 90 etc).
+- `--lr-end` is the final LR to approach when using exponential LR.
 - `--batch-size` is the batch size.
 - `--wdl` is the weight of the WDL loss. (1.0 would train the network to only predict game outcome, while 0.0 would aim to predict only eval, and other values interpolate between the two)
 - `--scale` is the multiplier for the sigmoid output of the final neuron.
-- `--save-epochs n` tells the trainer to save the network every `n` epochs.
+- `--save-epochs n` tells the trainer to save the network and a checkpoint every `n` epochs.
+
+Passing `--lr-end` will override `--lr-drop` and use exponential LR instead of step LR. Passing neither will use constant LR.
 
 8. Convert the resulting JSON network file into a format usable by your engine:
 
-The trainer will output a number of files in the `nn/` directory - files of the form `net0001_X` are saved state_dict files, which you can ignore (unless you're aiming to resume a half-completed training run) - `net0001.json` is what you're interested in: a JSON file containing the final weights of the network. 
+The trainer will output a number of files in the `nn/` directory - files in the subdirectory `nn/checkpoints/` are checkpoint files, which you can ignore (unless you're aiming to resume a half-completed training run) - `net0001_N.json` is what you're interested in: a JSON file containing the weights of the network after epoch N.
 
-In order to use the network, you will need to convert the JSON file into a more usable format, and you will almost certainly want to quantise it. For simple perspective networks, this can be done with [nnue-jsontobin](https://github.com/cosmobobak/nnue-jsontobin), while for more complex networks like HalfKP and HalfKA (or ones you have designed yourself!) you will need to employ some elbow grease.
+In order to use the network, you will need to convert the JSON file into a more usable format, and you will almost certainly want to quantise it. For simple perspective or HalfKA networks, this can be done with [nnue-jsontobin](https://github.com/cosmobobak/nnue-jsontobin), while for HalfKP networks (or ones you have designed yourself!) you will need to employ some elbow grease.
 
 # Getting Data
 To train a network, you will need a large amount of training data. There are a number of possible sources for this data, the most common of which is that you will generate it using your own chess engine, which requires that you write some datagen code. It is recommended that your data generator produce data directly in the marlinflow data format, and not in the legacy text format (see [Legacy Text Format](#legacy-text-format)), as it is a significantly more compact format, and skips the required conversion step.
@@ -80,7 +84,7 @@ Marlinflow accepts a specific text format for conversion into data files, with l
 <fen0> | <eval0> | <wdl0>
 <fen1> | <eval1> | <wdl1>
 ```
-Here, `<fen>` is a [FEN string](https://www.chessprogramming.org/Forsyth-Edwards_Notation), `<eval>` is a evaluation in centipawns from white's point of view, and `<wdl>` is 1.0, 0.5, or 0.0, representing a win for white, a draw, or a win for black, respectively.
+Here, `<fen>` is a [FEN string](https://www.chessprogramming.org/Forsyth-Edwards_Notation) (or [Shredder-FEN](https://en.wikipedia.org/wiki/Forsyth%E2%80%93Edwards_Notation#FEN_adjustment_for_chess_variants_like_Chess960) for Chess960 positions), `<eval>` is a evaluation in centipawns from white's point of view, and `<wdl>` is 1.0, 0.5, or 0.0, representing a win for white, a draw, or a win for black, respectively.  
 
 # Marlinflow-Utils
 `marlinflow-utils` is a program that provides a number of utilities for working with marlinflow. These are as follows:
