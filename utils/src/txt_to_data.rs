@@ -30,6 +30,7 @@ pub fn run(options: Options) -> Result<()> {
             let (fen, annotation) = line.split_once(" | ")?;
             let (cp, wdl) = annotation.split_once(" | ")?;
 
+            // try parsing initially as a standard fen, retry as shredder fen if that fails
             let board = Board::from_fen(fen, false).unwrap_or(Board::from_fen(fen, true).ok().unwrap());
             let cp: f32 = cp.parse().ok()?;
             let wdl: f32 = wdl.parse().ok()?;
