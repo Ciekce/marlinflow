@@ -56,6 +56,7 @@ python main.py       \
 - `--wdl` is the weight of the WDL loss. (1.0 would train the network to only predict game outcome, while 0.0 would aim to predict only eval, and other values interpolate between the two)
 - `--scale` is the multiplier for the sigmoid output of the final neuron.
 - `--save-epochs n` tells the trainer to save the network and a checkpoint every `n` epochs.
+- `--resume` is the path to a checkpoint file to resume a training run.
 
 Passing `--lr-end` will override `--lr-drop` and use exponential LR instead of step LR. Passing neither will use constant LR.
 
