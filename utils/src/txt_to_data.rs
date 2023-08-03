@@ -16,6 +16,8 @@ pub struct Options {
 }
 
 pub fn run(options: Options) -> Result<()> {
+    let mut total: usize = 0;
+
     let input = BufReader::new(File::open(options.txt_file)?);
     let mut output = BufWriter::new(File::create(options.output)?);
 
@@ -25,10 +27,10 @@ pub fn run(options: Options) -> Result<()> {
     for line in input.lines() {
         let line = line?;
         let _ = (|| {
-            let (board, annotation) = line.split_once(" | ")?;
+            let (fen, annotation) = line.split_once(" | ")?;
             let (cp, wdl) = annotation.split_once(" | ")?;
 
-            let board: Board = board.parse().ok()?;
+            let board = Board::from_fen(fen, false).unwrap_or(Board::from_fen(fen, true).ok().unwrap());
             let cp: f32 = cp.parse().ok()?;
             let wdl: f32 = wdl.parse().ok()?;
 
@@ -58,9 +60,15 @@ pub fn run(options: Options) -> Result<()> {
             };
 
             let packed = PackedBoard::pack(&board, cp, wdl, 0);
-            Some(output.write_all(bytemuck::bytes_of(&packed)))
+            let result = Some(output.write_all(bytemuck::bytes_of(&packed)));
+
+            total += 1;
+
+            result
         })().transpose()?;
     }
+
+    println!("converted {} positions at {} bytes each ({} bytes)", total, std::mem::size_of::<PackedBoard>(), total * std::mem::size_of::<PackedBoard>());
 
     Ok(())
 }
