@@ -24,8 +24,8 @@ cargo rustc --release -- -C target-cpu=native
 In `trainer/`, do
 ```bash
 mkdir nn
+mkdir nn/checkpoints
 mkdir runs
-mkdir runs/checkpoints
 ```
 
 5. Decide upon the directory in which you want to store your training data. (simply making a `data/` directory inside `trainer/` is a solid option)
