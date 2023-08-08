@@ -142,6 +142,7 @@ def main():
     parser.add_argument("--lr", type=float, help="Initial learning rate")
     parser.add_argument("--lr-end", type=float, help="Final learning rate")
     parser.add_argument("--lr-drop", type=int, help="Epoch to drop LR at for step LR")
+    parser.add_argument("--lr-drop-gamma", type=float, default=0.1, help="Scalar to multiply LR by when dropped by step LR")
     parser.add_argument("--epochs", type=int, help="Epochs to train for")
     parser.add_argument("--batch-size", type=int, default=16384, help="Batch size")
     parser.add_argument("--wdl", type=float, default=0.0, help="WDL weight to be used")
@@ -193,7 +194,7 @@ def main():
         scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=gamma, last_epoch=prev_epoch - 1, verbose=True)
     elif args.lr_drop is not None:
         print("Using step LR")
-        scheduler = torch.optim.lr_scheduler.StepLR(optimizer, args.lr_drop, gamma=0.3, last_epoch=prev_epoch - 1, verbose=True)
+        scheduler = torch.optim.lr_scheduler.StepLR(optimizer, args.lr_drop, gamma=args.lr_drop_gamma, last_epoch=prev_epoch - 1, verbose=True)
     else:
         print("No learning rate schedule specified, using constant LR")
         scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=1.0)

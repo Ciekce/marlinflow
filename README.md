@@ -41,8 +41,9 @@ python main.py       \
 - `--train-id` is the name of the training run.
 - `--lr` is the learning rate.
 - `--epochs` is the number of epochs to train for.
-- `--lr-drop` is the number of epochs after which the learning rate is dropped by a factor of 10. This occurs every N epochs (so with `--lr-drop 30`, LR will be dropped on epoch 30, 60, 90 etc).
 - `--lr-end` is the final LR to approach when using exponential LR.
+- `--lr-drop` is the number of epochs after which the learning rate is multiplied by `--step-lr-gamma` (default 0.1). This occurs every N epochs (so with `--lr-drop 30`, LR will be dropped on epoch 30, 60, 90 etc).
+- `--lr-drop-gamma` is the scalar to multiply the LR by on every LR drop when using step LR (`--lr-drop`).
 - `--batch-size` is the batch size.
 - `--wdl` is the weight of the WDL loss. (1.0 would train the network to only predict game outcome, while 0.0 would aim to predict only eval, and other values interpolate between the two)
 - `--scale` is the multiplier for the sigmoid output of the final neuron.
