@@ -98,8 +98,6 @@ def train(
                     json.dump(param_map, json_file)
                 print(f"Saved network to nn/{train_id}_{epoch}.json")
 
-            print(f"new lr: {scheduler.get_last_lr()}")
-
 
         optimizer.zero_grad()
         prediction = model(batch)
@@ -132,6 +130,8 @@ def train(
 
 
 def main():
+    pathlib.Path("nn/checkpoints").mkdir(parents=True, exist_ok=True)
+    pathlib.Path("runs").mkdir(exist_ok=True)
 
     parser = argparse.ArgumentParser(description="")
 
@@ -173,20 +173,6 @@ def main():
 
     optimizer = torch.optim.AdamW(model.parameters(), lr=args.lr)
 
-    scheduler: torch.optim.lr_scheduler._LRScheduler
-    if args.lr_end is not None:
-        # starting LR is args.lr, ending LR is args.lr_end
-        # there are args.epochs epochs
-        # so the LR should drop by a factor of (args.lr_end / args.lr) ** (1 / args.epochs) each epoch
-        gamma = (args.lr_end / args.lr) ** (1 / args.epochs)
-
-        scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=gamma)
-    elif args.lr_drop is not None:
-        scheduler = torch.optim.lr_scheduler.StepLR(optimizer, args.lr_drop, gamma=0.1)
-    else:
-        print("No learning rate schedule specified, using constant LR")
-        scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=1.0)
-
     prev_epoch = 0
 
     if args.resume is not None:
@@ -195,6 +181,22 @@ def main():
         model.load_state_dict(checkpoint['model_state'])
         optimizer.load_state_dict(checkpoint['optim_state'])
         prev_epoch = checkpoint['epoch']
+
+    scheduler: torch.optim.lr_scheduler._LRScheduler
+    if args.lr_end is not None:
+        print("Using exponential LR")
+        # starting LR is args.lr, ending LR is args.lr_end
+        # there are args.epochs epochs
+        # so the LR should drop by a factor of (args.lr_end / args.lr) ** (1 / args.epochs) each epoch
+        gamma = (args.lr_end / args.lr) ** (1 / args.epochs)
+
+        scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=gamma, last_epoch=prev_epoch - 1, verbose=True)
+    elif args.lr_drop is not None:
+        print("Using step LR")
+        scheduler = torch.optim.lr_scheduler.StepLR(optimizer, args.lr_drop, gamma=0.3, last_epoch=prev_epoch - 1, verbose=True)
+    else:
+        print("No learning rate schedule specified, using constant LR")
+        scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=1.0)
 
     train(
         model,
