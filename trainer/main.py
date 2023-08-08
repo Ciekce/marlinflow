@@ -9,14 +9,14 @@ import sys
 
 from dataloader import BatchLoader
 from model import (
-    NnBoard768Cuda,
     PerspectiveNet,
-    HalfKANet,
-    NnHalfKACuda,
-    HalfKPNet,
-    NnHalfKPCuda,
     SquaredPerspectiveNet,
     DeepPerspectiveNet,
+    HalfKANet,
+    HalfKPNet,
+    PerspectiveNetCuda,
+    HalfKANetCuda,
+    HalfKPNetCuda,
 )
 from time import time
 
@@ -166,6 +166,7 @@ def main():
 
     train_log = TrainLog(args.train_id)
 
+    # Modify this to your intended arch
     model = PerspectiveNet(384).to(DEVICE)
 
     data_path = pathlib.Path(args.data_root)

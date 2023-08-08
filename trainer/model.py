@@ -198,7 +198,7 @@ class HalfKANet(torch.nn.Module):
         return InputFeatureSet.HALF_KA
 
 
-class NnBoard768Cuda(torch.nn.Module):
+class PerspectiveNetCuda(torch.nn.Module):
     def __init__(self, ft_out: int):
         from cudasparse import DoubleFeatureTransformerSlice
 
@@ -230,7 +230,7 @@ class NnBoard768Cuda(torch.nn.Module):
         return InputFeatureSet.BOARD_768_CUDA
 
 
-class NnHalfKPCuda(torch.nn.Module):
+class HalfKPNetCuda(torch.nn.Module):
     def __init__(self, ft_out: int):
         super().__init__()
         from cudasparse import DoubleFeatureTransformerSlice
@@ -268,7 +268,7 @@ class NnHalfKPCuda(torch.nn.Module):
         return InputFeatureSet.HALF_KP_CUDA
 
 
-class NnHalfKACuda(torch.nn.Module):
+class HalfKANetCuda(torch.nn.Module):
     def __init__(self, ft_out: int):
         super().__init__()
         from cudasparse import DoubleFeatureTransformerSlice

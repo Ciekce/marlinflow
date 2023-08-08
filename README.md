@@ -19,9 +19,10 @@ cargo rustc --release -- -C target-cpu=native
 ```
 
 3. Locate the resulting `.so`/`.dll` in the `target/release/` directory and move it to the `trainer/` directory, renamed as libparse.so/libparse.dll.
-4. Decide upon the directory in which you want to store your training data. (simply making a `data/` directory inside `trainer/` is a solid option)
-5. Place your data file in the directory created in step 5. (if you don't have one, consult [Getting Data](#getting-data))
-6. In `trainer/`, run `main.py` with the proper command line arguments:
+4. Decide upon the directory in which you want to store your training data. (simply making a `data/` directory inside `trainer/` is a solid option).
+5. Place your data file in the directory created in step 5. (if you don't have one, consult [Getting Data](#getting-data)).
+6. Select your desired network architecture, and update the line in main.py marked `# Modify this to your intended arch` (currently 170). A list of available architectures is in the imports list at the top of main.py, and you can modify them or cook your own in model.py. The default is a 768->384x2->1 perspective network.
+7. In `trainer/`, run `main.py` with the proper command line arguments:
 
 A typical invocation for training a network looks like this:
 ```bash
