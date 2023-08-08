@@ -19,18 +19,9 @@ cargo rustc --release -- -C target-cpu=native
 ```
 
 3. Locate the resulting `.so`/`.dll` in the `target/release/` directory and move it to the `trainer/` directory, renamed as libparse.so/libparse.dll.
-4. Create some directories for training output in the `trainer/` directory:
-
-In `trainer/`, do
-```bash
-mkdir nn
-mkdir nn/checkpoints
-mkdir runs
-```
-
-5. Decide upon the directory in which you want to store your training data. (simply making a `data/` directory inside `trainer/` is a solid option)
-6. Place your data file in the directory created in step 5. (if you don't have one, consult [Getting Data](#getting-data))
-7. In `trainer/`, run `main.py` with the proper command line arguments:
+4. Decide upon the directory in which you want to store your training data. (simply making a `data/` directory inside `trainer/` is a solid option)
+5. Place your data file in the directory created in step 5. (if you don't have one, consult [Getting Data](#getting-data))
+6. In `trainer/`, run `main.py` with the proper command line arguments:
 
 A typical invocation for training a network looks like this:
 ```bash
