@@ -150,7 +150,7 @@ def main():
     parser.add_argument(
         "--save-epochs",
         type=int,
-        default=100,
+        default=5,
         help="How often the program will save the network",
     )
     parser.add_argument(
